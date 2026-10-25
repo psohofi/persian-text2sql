@@ -1,0 +1,29 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "persian-mariadb-text2sql"
+version = "0.1.0"
+description = "Persian text-to-MariaDB SQL generation with Ollama, Vanna or LlamaIndex, and SQLGlot"
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "MIT"}
+keywords = ["persian", "farsi", "text-to-sql", "mariadb", "ollama", "sqlglot"]
+dependencies = ["sqlglot>=28,<31"]
+
+[project.optional-dependencies]
+vanna = ["vanna[ollama]==2.0.2"]
+llamaindex = ["llama-index-core>=0.14.5,<0.15", "llama-index-llms-ollama>=0.11,<0.12"]
+all = ["vanna[ollama]==2.0.2", "llama-index-core>=0.14.5,<0.15", "llama-index-llms-ollama>=0.11,<0.12"]
+api = ["fastapi>=0.110", "uvicorn>=0.27"]
+dev = ["pytest>=8", "pytest-asyncio>=0.23"]
+
+[project.scripts]
+persian-text2sql = "persian_text2sql.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
