@@ -1,6 +1,6 @@
-# Persian Text-to-SQL for MariaDB/PostgreSQL
+# Persian Text-to-SQL for MariaDB
 
-Generate **MariaDB/PostgreSQL `SELECT` queries from Persian (Farsi) questions**, entirely with a **local Ollama model**. Choose either **Vanna 2.0 + SQLGlot** or **LlamaIndex + SQLGlot** without changing the rest of your application.
+Generate **MariaDB `SELECT` queries from Persian (Farsi) questions**, entirely with a **local Ollama model**. Choose either **Vanna 2.0 + SQLGlot** or **LlamaIndex + SQLGlot** without changing the rest of your application.
 
 > **SQL generation only.** This package does not connect to MariaDB, run queries, or send database contents to a remote LLM. You supply schema metadata as `.md`, `.sql`, or `.txt`. SQLGlot provides useful structural checks—not a full MariaDB grammar, security sandbox, or guarantee of valid columns.
 
@@ -13,7 +13,7 @@ Generate **MariaDB/PostgreSQL `SELECT` queries from Persian (Farsi) questions**,
 - 🔎 Shared **SQLGlot** parser, single-statement checks, rejection of recognized writes, `SELECT INTO`, locking reads, dangerous functions, and multiple statements.
 - 🛠️ Retry invalid SQL using the previous validation error; configurable context, timeout and output tokens.
 - ⚡ Native async completion through LlamaIndex; the Vanna Ollama adapter runs in a worker thread to avoid blocking the async event loop.
-- 📦 Separate optional dependencies and CLI; compatible with Windows CMD and offline wheel distribution.
+- 📦 Separate optional dependencies, online `pip` installation, and a CLI for Windows, Linux, and macOS.
 - 🧪 Unit tests that don't need a live Ollama server or MariaDB connection.
 
 ## Architecture
@@ -58,64 +58,96 @@ Persian user question (e.g. «۱۰ مشتری پرفروش را نشان بده�
 - An Ollama model that understands Persian and can produce SQL. Examples use `gemma4:12b`.
 - A schema document describing your **actual** MariaDB tables/columns, foreign keys, allowed status values, and date/calendar conventions.
 
-## Quick start (Windows CMD)
+## Install online
 
-Open **Command Prompt** in the repository folder:
+The commands below **download dependencies from PyPI** with `pip`. No wheel directory or offline package files are needed. You can install **Vanna only**, **LlamaIndex only**, or **both**.
+
+### Option A — Clone the GitHub repository (recommended)
+
+**Windows CMD:**
 
 ```cmd
-cd C:\projects\persian-mariadb-text2sql
+git clone https://github.com/psohofi/persian-text2sql.git
+cd persian-text2sql
 py -m venv .venv
 .venv\Scripts\activate.bat
 python -m pip install --upgrade pip
 ```
 
-**Install one provider** (recommended when comparing dependency sizes):
+If you already cloned the repository, open CMD inside its folder (the folder containing `pyproject.toml`) and start from `py -m venv .venv`.
 
-```cmd
+**Linux / macOS:**
+
+```bash
+git clone https://github.com/psohofi/persian-text2sql.git
+cd persian-text2sql
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install --upgrade pip
+```
+
+Install **just Vanna + SQLGlot**:
+
+```bash
 python -m pip install -e ".[vanna]"
 ```
 
-or:
+Or install **just LlamaIndex + SQLGlot**:
 
-```cmd
+```bash
 python -m pip install -e ".[llamaindex]"
 ```
 
-Install **both**:
+Install **both backends**:
 
-```cmd
+```bash
 python -m pip install -e ".[all]"
 ```
 
-Install a FastAPI example too:
+For both backends **plus the optional FastAPI example**:
 
-```cmd
+```bash
 python -m pip install -e ".[all,api]"
 ```
 
-Verify Ollama (install it separately from pip):
+`-e` installs this project in *editable mode*: changes to its source files are picked up without reinstalling. The dependencies are installed online from PyPI.
+
+### Option B — Install directly from GitHub (without cloning)
+
+If you only want to use the package in another project, install it straight from this repository:
+
+```bash
+python -m pip install "persian-mariadb-text2sql[all] @ git+https://github.com/psohofi/persian-text2sql.git"
+```
+
+To install just one provider, change `[all]` to `[vanna]` or `[llamaindex]`. Git must be installed and your machine must be able to access GitHub and PyPI. For active development, Option A is usually easier.
+
+### Set up Ollama and the local model
+
+Install [Ollama](https://ollama.com/download) separately, then download the model:
 
 ```cmd
 ollama pull gemma4:12b
 ollama list
-ollama ps
 ```
 
-Ollama normally serves `http://localhost:11434` as a local background service. If yours isn't running, run `ollama serve` in another terminal (some installations already run it as a background service).
+Ollama normally serves `http://localhost:11434` in the background. If yours is not running, execute `ollama serve` in another terminal.
 
-**Generate SQL with the CLI**:
+### Generate SQL from Persian questions
+
+With the repository installed, use the CLI:
 
 ```cmd
 persian-text2sql --backend vanna --schema examples/schema.md "۱۰ مشتری با بیشترین فروش را نمایش بده"
 ```
 
-or:
+Or:
 
 ```cmd
 persian-text2sql --backend llamaindex --schema examples/schema.md "مشتریانی که سفارشی ندارند را نمایش بده"
 ```
 
-If Windows console does not accept Persian characters properly, use **Windows Terminal** and a Unicode-capable font, or run the Python examples instead.
+If Windows CMD doesn't display Persian text correctly, try Windows Terminal with UTF-8 support, or run one of the Python examples.
 
 ## Python integration
 
@@ -242,25 +274,6 @@ Exceptions:
 - `ModelRequestError`: Ollama request failed or timed out.
 - `ValueError`: invalid question, schema or constructor arguments.
 
-## Offline wheel installation (Windows)
-
-On an **internet-connected** machine with the same target OS, CPU architecture and Python version, from the repository root:
-
-```cmd
-python -m pip install --upgrade pip setuptools wheel
-python -m pip wheel --wheel-dir .\wheelhouse ".[all,api]"
-```
-
-`pip wheel` builds this project's wheel **and** fetches runtime dependency wheels, including Vanna, LlamaIndex and SQLGlot. Copy **the entire `wheelhouse` directory** to the offline computer, then install the prebuilt wheel using its package name:
-
-```cmd
-python -m pip install --no-index --find-links=.\wheelhouse "persian-mariadb-text2sql[all,api]"
-```
-
-If you only need one backend, replace `all` with `vanna` or `llamaindex` in **both** commands. `dev` dependencies are only for tests. This includes Python packages, **not** the Ollama runtime or model weights. Provision those separately on the offline machine.
-
-To run from a GitHub clone in editable mode on a machine **with internet**, use the normal `pip install -e` instructions above instead.
-
 ## Troubleshooting
 
 **`Ollama request failed: timeout`**
@@ -336,5 +349,3 @@ persian-mariadb-text2sql/
     ├── test_validation.py
     └── test_services.py
 ```
-
-
